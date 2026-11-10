@@ -1,0 +1,189 @@
+.panel {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Encabezado */
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.75rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.marca-nombre {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.usuario-correo {
+  color: var(--color-ink-muted);
+  font-size: 0.9rem;
+}
+
+.insignia-rol {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.insignia-admin {
+  background: #ede3fc;
+  color: #7c3aed;
+}
+
+.insignia-cliente {
+  background: #dce7fe;
+  color: #2563eb;
+}
+
+/* Contenido */
+
+.contenido {
+  flex: 1;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 1.75rem 3rem;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .contenido {
+    grid-template-columns: 1fr;
+  }
+}
+
+.seccion-nuevo-pedido,
+.seccion-lista {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio);
+  padding: 1.4rem;
+}
+
+.seccion-lista-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.seccion-lista-titulo h2 {
+  margin: 0;
+}
+
+/* Formulario nuevo pedido */
+
+.formulario-pedido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.campo label {
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+}
+
+/* Tabla de pedidos */
+
+.tabla-pedidos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tabla-pedidos th {
+  text-align: left;
+  font-size: 0.78rem;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabla-pedidos td {
+  padding: 0.65rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.celda-id {
+  font-family: var(--font-display);
+  color: var(--color-ink-muted);
+}
+
+.celda-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.celda-fecha {
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+
+.celda-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.pastilla-estado {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.estado-pendiente {
+  color: var(--estado-pendiente-ink);
+  background: var(--estado-pendiente-bg);
+}
+
+.estado-en_preparacion {
+  color: var(--estado-preparacion-ink);
+  background: var(--estado-preparacion-bg);
+}
+
+.estado-enviado {
+  color: var(--estado-enviado-ink);
+  background: var(--estado-enviado-bg);
+}
+
+.estado-entregado {
+  color: var(--estado-entregado-ink);
+  background: var(--estado-entregado-bg);
+}
+
+.estado-cancelado {
+  color: var(--estado-cancelado-ink);
+  background: var(--estado-cancelado-bg);
+}
