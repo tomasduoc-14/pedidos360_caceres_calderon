@@ -1,0 +1,55 @@
+server:
+  port: 8070
+
+spring:
+  application:
+    name: streaming-service
+
+# ---------------------------------------------------------------------------
+# Aplicaciones consumidoras de Kinesis (KCL 3.x). Unica fuente de nombres y parametros.
+# Las credenciales NUNCA van aqui: cadena por defecto del SDK (variables de entorno / rol de IAM).
+# Con STREAMING_HABILITADO=false (valor por defecto) el servicio arranca sin AWS.
+# ---------------------------------------------------------------------------
+streaming:
+  habilitado: ${STREAMING_HABILITADO:false}
+  region: ${AWS_REGION:us-east-1}
+  simular-fallos: ${STREAMING_SIMULAR_FALLOS:true}   # productos de demo: FALLO_TRANSITORIO, FALLO_PERSISTENTE, FALLO_IRRECUPERABLE
+
+  streams:
+    pedidos:
+      nombre: pedidos-estado
+    actividad:
+      nombre: actividad-clientes
+    fallidos:
+      nombre: eventos-fallidos
+
+  # Cada aplicacion consumidora tiene nombre propio: la KCL crea una tabla de coordinacion
+  # en DynamoDB con ese nombre (reparto de shards entre instancias y checkpoints).
+  consumidores:
+    notificaciones:                                  # lee pedidos-estado
+      habilitada: ${STREAMING_APP_NOTIFICACIONES:true}
+      nombre: notificaciones-app
+      stream: ${streaming.streams.pedidos.nombre}
+    analitica:                                       # lee el MISMO stream, con su propio avance
+      habilitada: ${STREAMING_APP_ANALITICA:true}
+      nombre: analitica-app
+      stream: ${streaming.streams.pedidos.nombre}
+    tendencias:                                      # lee actividad-clientes
+      habilitada: ${STREAMING_APP_TENDENCIAS:true}
+      nombre: tendencias-app
+      stream: ${streaming.streams.actividad.nombre}
+
+  kcl:
+    posicion-inicial: TRIM_HORIZON      # lee desde el evento mas antiguo disponible (LATEST = solo los nuevos)
+    espera-entre-lecturas-ms: 1000      # intervalo de lectura (polling); minimo permitido: 200
+    nivel-metricas: SUMMARY             # metricas de la KCL en CloudWatch (NONE, SUMMARY o DETAILED)
+    apagado-gracioso-segundos: 30
+
+  procesamiento:
+    max-intentos: 3                     # reintentos de errores transitorios antes de enviar a fallidos
+    espera-inicial-ms: 500              # espera creciente: 500, 1000, 2000 ... ms
+    espera-maxima-ms: 4000
+
+  tablas:
+    contadores: analitica-resumen       # totales en linea (analitica y tendencias)
+    procesados: eventos-procesados      # eventoId ya procesados por cada aplicacion (duplicados)
