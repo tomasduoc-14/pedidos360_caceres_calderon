@@ -34,3 +34,39 @@ mensajeria:
       retencion-segundos: 604800
       dlq-retencion-segundos: 1209600
       max-receive-count: 5
+
+# ---------------------------------------------------------------------------
+# Streaming con Amazon Kinesis Data Streams (Parcial 3).
+# Unica fuente de nombres y parametros: ninguna clase debe escribirlos a mano.
+# La region sale de AWS_REGION. Las credenciales NUNCA van aqui: se toman de la
+# cadena por defecto del SDK (variables de entorno en el PC, rol de IAM en el EC2).
+# Con STREAMING_HABILITADO=false (valor por defecto) la aplicacion arranca sin AWS.
+# ---------------------------------------------------------------------------
+streaming:
+  habilitado: ${STREAMING_HABILITADO:false}
+  region: ${AWS_REGION:us-east-1}
+  cliente:
+    retry-mode: STANDARD                 # reintentos del SDK ante errores transitorios
+    api-call-timeout-segundos: 10        # tiempo maximo de una llamada completa (con reintentos)
+    api-call-attempt-timeout-segundos: 5 # tiempo maximo de cada intento
+  productor:
+    max-registros-por-lote: 100          # PutRecords admite hasta 500 registros por llamada
+    max-intentos: 4                      # reintentos de los registros que Kinesis rechaza
+    espera-inicial-ms: 200               # espera creciente: 200, 400, 800 ms ...
+    espera-maxima-ms: 2000
+  streams:
+    pedidos:                             # flujo 1: estado de los pedidos
+      nombre: pedidos-estado
+      shards: 3
+      retencion-horas: 72                # diseno; el Learner Lab solo permite 24 (ver infra/crear-streams.sh)
+      modo-capacidad: PROVISIONED
+    actividad:                           # flujo 2: vistas y clics de clientes
+      nombre: actividad-clientes
+      shards: 3
+      retencion-horas: 24
+      modo-capacidad: PROVISIONED
+    fallidos:                            # dead letter stream
+      nombre: eventos-fallidos
+      shards: 1
+      retencion-horas: 168               # diseno; el Learner Lab solo permite 24
+      modo-capacidad: PROVISIONED
