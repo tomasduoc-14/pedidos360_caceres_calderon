@@ -34,3 +34,13 @@ build/
 
 *.log
 *.bak
+
+# Credenciales y secretos: nunca al repositorio
+.env
+.env.*
+*.pem
+*.key
+credentials
+*.credentials
+**/application-local.yml
+.aws/
