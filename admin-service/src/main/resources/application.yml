@@ -24,3 +24,19 @@ admin:
     retencion-segundos: 345600
     dlq-retencion-segundos: 1209600
     max-receive-count: 3
+
+# Administrador de streams de Kinesis (StreamAdminService). Los nombres de las aplicaciones deben
+# coincidir con los de streaming-service: cada uno es tambien el nombre de su tabla de coordinacion en DynamoDB.
+kinesis-admin:
+  region: ${AWS_REGION:us-east-1}
+  por-defecto:
+    shards: 3
+    retencion-horas: 24
+  ventana-lag-minutos: 10
+  aplicaciones:
+    - nombre: notificaciones-app
+      stream: pedidos-estado
+    - nombre: analitica-app
+      stream: pedidos-estado
+    - nombre: tendencias-app
+      stream: actividad-clientes

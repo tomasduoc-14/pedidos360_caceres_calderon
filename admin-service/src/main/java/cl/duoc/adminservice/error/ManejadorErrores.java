@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.kinesis.model.ResourceInUseException;
 
 @RestControllerAdvice
 public class ManejadorErrores {
@@ -21,6 +22,11 @@ public class ManejadorErrores {
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<Map<String, Object>> noEncontrado(RecursoNoEncontradoException e) {
         return cuerpo(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(OperacionNoPermitidaException.class)
+    public ResponseEntity<Map<String, Object>> noPermitida(OperacionNoPermitidaException e) {
+        return cuerpo(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -34,6 +40,13 @@ public class ManejadorErrores {
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return cuerpo(HttpStatus.BAD_REQUEST, detalle);
+    }
+
+    /** Stream ya existe o esta en medio de un cambio (CREATING, UPDATING, DELETING). */
+    @ExceptionHandler(ResourceInUseException.class)
+    public ResponseEntity<Map<String, Object>> streamEnUso(ResourceInUseException e) {
+        String mensaje = e.awsErrorDetails() != null ? e.awsErrorDetails().errorMessage() : e.getMessage();
+        return cuerpo(HttpStatus.CONFLICT, mensaje);
     }
 
     @ExceptionHandler(AwsServiceException.class)

@@ -12,7 +12,7 @@
 	<artifactId>admin-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>admin-service</name>
-	<description>Microservicio administrador de colas, topicos y consumidores (SNS/SQS)</description>
+	<description>Microservicio administrador de colas, topicos, consumidores (SNS/SQS) y streams (Kinesis)</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
@@ -45,6 +45,24 @@
 		<dependency>
 			<groupId>io.awspring.cloud</groupId>
 			<artifactId>spring-cloud-aws-starter-sns</artifactId>
+		</dependency>
+		<!-- Parcial 3: administracion de streams (Kinesis), leases de KCL (DynamoDB) y metricas (CloudWatch) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>kinesis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>cloudwatch</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

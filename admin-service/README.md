@@ -1,7 +1,7 @@
 # admin-service
 
-Microservicio administrador de la mensajeria de Pedidos360 (SNS + SQS).
-Puerto `8090`. Toda la logica esta en `ColaAdminService`; los controladores solo delegan.
+Microservicio administrador de Pedidos360: mensajeria (SNS + SQS, Parcial 2) y streams (Kinesis, Parcial 3).
+Puerto `8090`. La logica de colas esta en `ColaAdminService` y la de streams en `StreamAdminService`; los controladores solo delegan.
 
 ## Levantar
 ```powershell
@@ -65,3 +65,52 @@ quedan en la cola y otra instancia activa los toma.
 - `retencion-segundos: 345600` (4 dias): margen para recuperarse de una caida de fin de semana.
 - `dlq-retencion-segundos: 1209600` (14 dias, el maximo): la retencion corre desde que el mensaje entro a la cola original, por eso la DLQ debe retener mas.
 - `max-receive-count: 3`: 3 intentos antes de enviar a la DLQ.
+
+
+---
+
+# Administracion de streams (Parcial 3, Kinesis)
+
+Toda la logica esta en `StreamAdminService`; `StreamsAdminController` y `StreamConsumersAdminController` solo delegan.
+Se configura en `application.yml` (prefijo `kinesis-admin`): region, valores por defecto (3 shards, 24 h),
+ventana de lag (10 min) y las aplicaciones consumidoras que se pueden inspeccionar.
+
+## API REST de streams
+
+| Verbo | Ruta | Que hace |
+|---|---|---|
+| GET | `/api/admin/streams` | Lista los streams (nombre, estado, modo, shards, retencion) |
+| POST | `/api/admin/streams` | Crea un stream (`nombre`; opcionales `shards`, `retencionHoras`, `modo`) |
+| GET | `/api/admin/streams/{nombre}` | Describe el stream y sus shards (rango de hash, padre, abierto/cerrado) |
+| PUT | `/api/admin/streams/{nombre}/shards` | Cambia la cantidad de shards (`UpdateShardCount`, escalado uniforme) |
+| PUT | `/api/admin/streams/{nombre}/retention` | Cambia la retencion en horas (aumenta o reduce) |
+| GET | `/api/admin/streams/{nombre}/lag` | Edad maxima del registro leido (`IteratorAgeMilliseconds`, CloudWatch) |
+| DELETE | `/api/admin/streams/{nombre}` | Elimina el stream |
+| GET | `/api/admin/stream-consumers` | Aplicaciones consumidoras: shards asignados, sin asignar, instancias |
+| GET | `/api/admin/stream-consumers/{app}` | Por shard: dueno (instancia), checkpoint, contador de lease y atraso en ms |
+
+Todas llevan `X-Admin-Key`. Ejemplos (PowerShell):
+```powershell
+$h = @{ 'X-Admin-Key' = 'clave-demo'; 'Content-Type' = 'application/json' }
+Invoke-RestMethod http://localhost:8090/api/admin/streams -Headers $h
+Invoke-RestMethod http://localhost:8090/api/admin/streams -Method Post -Headers $h -Body '{"nombre":"demo","shards":2}'
+Invoke-RestMethod http://localhost:8090/api/admin/streams/pedidos-estado/shards -Method Put -Headers $h -Body '{"shards":6}'
+Invoke-RestMethod http://localhost:8090/api/admin/stream-consumers/analitica-app -Headers $h
+```
+
+## Como se inspecciona una aplicacion consumidora
+KCL guarda, en DynamoDB y en una tabla con el nombre de la aplicacion, una fila por shard con su dueno
+(`leaseOwner`: la instancia que lo procesa) y su `checkpoint` (hasta donde esta procesado). El administrador
+lee esa tabla, la cruza con los shards abiertos del stream y, por cada checkpoint, lee 1 registro con
+`GetRecords` para obtener `MillisBehindLatest` (cuanto falta para llegar al final del shard = el atraso).
+Un shard sin fila o sin dueno aparece como `SIN_ASIGNAR`. Las filas de control de KCL (`Leader`,
+`Migration3.0`, metricas de workers) se ignoran. Si la aplicacion nunca se inicio, responde 404.
+
+## Limites de AWS que el administrador respeta o informa
+- `UpdateShardCount` solo permite como maximo duplicar o reducir a la mitad, y hay un tope de cambios por dia.
+  El stream queda en `UPDATING` y luego `ACTIVE`; los shards antiguos se cierran y KCL toma los nuevos solo.
+- En el Learner Lab una politica de la organizacion **bloquea aumentar la retencion** (`403`); reducirla si funciona.
+  Al crear un stream con mas de 24 h, si AWS lo niega, el stream se crea igual y la respuesta trae una `advertencia`.
+- En modo `ON_DEMAND` los shards los administra AWS: el endpoint de shards responde `400`.
+- Errores: `400` datos invalidos, `403` operacion no permitida por el entorno, `404` stream o aplicacion inexistente,
+  `409` el stream ya existe o esta en cambio, `503` sin credenciales o red.
