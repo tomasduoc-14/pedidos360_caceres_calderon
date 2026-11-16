@@ -44,3 +44,13 @@ credentials
 *.credentials
 **/application-local.yml
 .aws/
+
+# Credenciales y secretos: nunca al repositorio
+.env
+.env.*
+*.pem
+*.key
+credentials
+*.credentials
+**/application-local.yml
+.aws/
